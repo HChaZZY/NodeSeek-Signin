@@ -8,6 +8,7 @@ from curl_cffi import requests
 from yescaptcha import YesCaptchaSolver, YesCaptchaSolverError
 from turnstile_solver import TurnstileSolver, TurnstileSolverError
 
+
 def _get_env_str(name: str, default: str = "") -> str:
     """读取环境变量并去掉空白；若为空字符串则回退 default。"""
     v = os.getenv(name)
@@ -22,45 +23,45 @@ def _get_impersonate_candidates() -> list[str]:
     """
     primary = _get_env_str("NS_IMPERSONATE", "")
     defaults = [
-    # Chrome (Desktop)
-    "chrome99",
-    "chrome100",
-    "chrome101",
-    "chrome104",
-    "chrome107",
-    "chrome110",
-    "chrome116",
-    "chrome119",
-    "chrome120",
-    "chrome123",
-    "chrome124",
-    "chrome131",
-    "chrome133a",
-    "chrome136",
+        # Chrome (Desktop)
+        "chrome99",
+        "chrome100",
+        "chrome101",
+        "chrome104",
+        "chrome107",
+        "chrome110",
+        "chrome116",
+        "chrome119",
+        "chrome120",
+        "chrome123",
+        "chrome124",
+        "chrome131",
+        "chrome133a",
+        "chrome136",
 
-    # Chrome (Android)
-    "chrome99_android",
-    "chrome131_android",
+        # Chrome (Android)
+        "chrome99_android",
+        "chrome131_android",
 
-    # Edge
-    "edge99",
-    "edge101",
+        # Edge
+        "edge99",
+        "edge101",
 
-    # Safari
-    "safari153",
-    "safari155",
-    "safari170",
-    "safari172_ios",
-    "safari180",
-    "safari180_ios",
-    "safari184",
-    "safari184_ios",
-    "safari260",
-    "safari260_ios",
+        # Safari
+        "safari153",
+        "safari155",
+        "safari170",
+        "safari172_ios",
+        "safari180",
+        "safari180_ios",
+        "safari184",
+        "safari184_ios",
+        "safari260",
+        "safari260_ios",
 
-    # Firefox / Tor
-    "firefox133",
-    "tor145",
+        # Firefox / Tor
+        "firefox133",
+        "tor145",
     ]
 
     candidates: list[str] = []
@@ -83,24 +84,26 @@ except ImportError:
     print("未加载通知模块，跳过通知功能")
 
 # ---------------- 环境检测函数 ----------------
+
+
 def detect_environment():
     """检测当前运行环境"""
     # 优先检测是否在 Docker 环境中
     if os.environ.get("IN_DOCKER") == "true":
         return "docker"
-        
+
     # 检测是否在青龙环境中
     ql_path_markers = ['/ql/data/', '/ql/config/', '/ql/', '/.ql/']
     in_ql_env = False
-    
+
     for path in ql_path_markers:
         if os.path.exists(path):
             in_ql_env = True
             break
-    
+
     # 检测是否在GitHub Actions环境中
     in_github_env = os.environ.get("GITHUB_ACTIONS") == "true" or (os.environ.get("GH_PAT") and os.environ.get("GITHUB_REPOSITORY"))
-    
+
     if in_ql_env:
         return "qinglong"
     elif in_github_env:
@@ -109,6 +112,8 @@ def detect_environment():
         return "unknown"
 
 # ---------------- GitHub 变量写入函数 ----------------
+
+
 def save_cookie_to_github_var(var_name: str, cookie: str):
     import requests as py_requests
     token = os.environ.get("GH_PAT")
@@ -145,18 +150,20 @@ def save_cookie_to_github_var(var_name: str, cookie: str):
         return False
 
 # ---------------- 青龙面板变量删除函数 ----------------
+
+
 def delete_ql_env(var_name: str):
     """删除青龙面板中的指定环境变量"""
     try:
         print(f"查询要删除的环境变量: {var_name}")
         env_result = QLAPI.getEnvs({"searchValue": var_name})
-        
+
         env_ids = []
         if env_result.get("code") == 200 and env_result.get("data"):
             for env in env_result.get("data"):
                 if env.get("name") == var_name:
                     env_ids.append(env.get("id"))
-        
+
         if env_ids:
             print(f"找到 {len(env_ids)} 个环境变量需要删除: {env_ids}")
             delete_result = QLAPI.deleteEnvs({"ids": env_ids})
@@ -177,14 +184,16 @@ def delete_ql_env(var_name: str):
         return False
 
 # ---------------- 青龙面板变量更新函数 ----------------
+
+
 def save_cookie_to_ql(var_name: str, cookie: str):
     """保存Cookie到青龙面板环境变量"""
-    
+
     try:
         delete_result = delete_ql_env(var_name)
         if not delete_result:
             print("删除已有变量失败，但仍将尝试创建新变量")
-        
+
         create_data = {
             "envs": [
                 {
@@ -195,7 +204,7 @@ def save_cookie_to_ql(var_name: str, cookie: str):
                 }
             ]
         }
-        
+
         create_result = QLAPI.createEnv(create_data)
         if create_result.get("code") == 200:
             print(f"青龙面板环境变量 {var_name} 创建成功")
@@ -207,8 +216,10 @@ def save_cookie_to_ql(var_name: str, cookie: str):
         print(f"青龙面板环境变量操作异常: {str(e)}")
         return False
 
+
 # ---------------- Docker Cookie 文件保存 ----------------
 COOKIE_FILE_PATH = "./cookie/NS_COOKIE.txt"
+
 
 def save_cookie_to_file(cookie_str: str):
     """将Cookie保存到文件"""
@@ -224,10 +235,12 @@ def save_cookie_to_file(cookie_str: str):
         return False
 
 # ---------------- 统一变量保存函数 ----------------
+
+
 def save_cookie(var_name: str, cookie: str):
     """根据当前环境保存Cookie到相应位置"""
     env_type = detect_environment()
-    
+
     if env_type == "docker":
         print("检测到Docker环境，保存Cookie到文件...")
         return save_cookie_to_file(cookie)
@@ -242,6 +255,8 @@ def save_cookie(var_name: str, cookie: str):
         return False
 
 # ---------------- 登录逻辑 ----------------
+
+
 def session_login(user, password, solver_type, api_base_url, client_key):
     try:
         if solver_type.lower() == "yescaptcha":
@@ -309,12 +324,15 @@ def session_login(user, password, solver_type, api_base_url, client_key):
         return None
 
 # ---------------- 签到逻辑 ----------------
+
+
 def _is_cloudflare_challenge(text: str) -> bool:
     if not text:
         return False
     t = text.lower()
     # 常见挑战页特征
     return ("just a moment" in t) or ("cf-chl" in t) or ("challenge" in t and "cloudflare" in t)
+
 
 def _request_with_impersonate_fallback(method: str, url: str, *, headers: dict, json_data=None, timeout: int = 25):
     last_resp = None
@@ -340,10 +358,11 @@ def _request_with_impersonate_fallback(method: str, url: str, *, headers: dict, 
     # 所有候选都试过后返回最后一次响应或错误，并把最后尝试的指纹返回给调用方
     return last_resp, (ordered_candidates[-1] if ordered_candidates else IMPERSONATE_VERSION), last_err
 
+
 def sign(ns_cookie, ns_random):
     if not ns_cookie:
         return "invalid", "无有效Cookie"
-        
+
     headers = {
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
         'origin': "https://www.nodeseek.com",
@@ -378,33 +397,35 @@ def sign(ns_cookie, ns_random):
         return "error", str(e)
 
 # ---------------- 查询签到收益统计函数 ----------------
+
+
 def get_signin_stats(ns_cookie, days=30):
     """查询前days天内的签到收益统计"""
     if not ns_cookie:
         return None, "无有效Cookie"
-    
+
     if days <= 0:
         days = 1
-    
+
     headers = {
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
         'origin': "https://www.nodeseek.com",
         'referer': "https://www.nodeseek.com/board",
         'Cookie': ns_cookie
     }
-    
+
     try:
         # 使用UTC+8时区（上海时区）
         shanghai_tz = ZoneInfo("Asia/Shanghai")
         now_shanghai = datetime.now(shanghai_tz)
-        
+
         # 计算查询开始时间：当前时间减去指定天数
         query_start_time = now_shanghai - timedelta(days=days)
-        
+
         # 获取多页数据以确保覆盖指定天数内的所有数据
         all_records = []
         page = 1
-        
+
         while page <= 20:  # 最多查询20页，防止无限循环
             url = f"https://www.nodeseek.com/api/account/credit/page-{page}"
             response, used_impersonate, req_err = _request_with_impersonate_fallback(
@@ -442,7 +463,7 @@ def get_signin_stats(ns_cookie, days=30):
 
             page += 1
             time.sleep(0.5)
-        
+
         # 筛选指定天数内的签到收益记录
         signin_records = []
         for record in all_records:
@@ -450,7 +471,7 @@ def get_signin_stats(ns_cookie, days=30):
             record_time = datetime.fromisoformat(
                 timestamp.replace('Z', '+00:00'))
             record_time_shanghai = record_time.astimezone(shanghai_tz)
-            
+
             # 只统计指定天数内的签到收益
             if (record_time_shanghai >= query_start_time and
                     "签到收益" in description and "鸡腿" in description):
@@ -459,12 +480,12 @@ def get_signin_stats(ns_cookie, days=30):
                     'date': record_time_shanghai.strftime('%Y-%m-%d'),
                     'description': description
                 })
-        
+
         # 生成时间范围描述
         period_desc = f"近{days}天"
         if days == 1:
             period_desc = "今天"
-        
+
         if not signin_records:
             return {
                 'total_amount': 0,
@@ -473,12 +494,12 @@ def get_signin_stats(ns_cookie, days=30):
                 'records': [],
                 'period': period_desc,
             }, f"查询成功，但没有找到{period_desc}的签到记录"
-        
+
         # 统计数据
         total_amount = sum(record['amount'] for record in signin_records)
         days_count = len(signin_records)
         average = round(total_amount / days_count, 2) if days_count > 0 else 0
-        
+
         stats = {
             'total_amount': total_amount,
             'average': average,
@@ -486,34 +507,36 @@ def get_signin_stats(ns_cookie, days=30):
             'records': signin_records,
             'period': period_desc
         }
-        
+
         return stats, "查询成功"
-        
+
     except Exception as e:
         return None, f"查询异常: {str(e)}"
 
 # ---------------- 显示签到统计信息 ----------------
+
+
 def print_signin_stats(stats, account_name):
     """打印签到统计信息"""
     if not stats:
         return
-        
+
     print(f"\n==== {account_name} 签到收益统计 ({stats['period']}) ====")
     print(f"签到天数: {stats['days_count']} 天")
     print(f"总获得鸡腿: {stats['total_amount']} 个")
     print(f"平均每日鸡腿: {stats['average']} 个")
-    
+
 
 # ---------------- 主流程 ----------------
 if __name__ == "__main__":
     solver_type = os.getenv("SOLVER_TYPE", "turnstile")
     api_base_url = os.getenv("API_BASE_URL", "")
-    client_key = os.getenv("CLIENTT_KEY", "") 
+    client_key = os.getenv("CLIENTT_KEY", "")
     ns_random = os.getenv("NS_RANDOM", "true")
 
     env_type = detect_environment()
     print(f"当前运行环境: {env_type}")
-    
+
     accounts = []
 
     # 先收集账号密码配置
@@ -531,7 +554,7 @@ if __name__ == "__main__":
             index += 1
         else:
             break
-    
+
     # 读取现有Cookie
     all_cookies = ""
     if detect_environment() == "docker":
@@ -547,37 +570,37 @@ if __name__ == "__main__":
             print("Cookie文件不存在，将使用空Cookie。")
     else:
         all_cookies = os.getenv("NS_COOKIE", "")
-        
+
     cookie_list = all_cookies.split("&")
     cookie_list = [c.strip() for c in cookie_list if c.strip()]
-    
+
     print(f"共发现 {len(accounts)} 个账户配置，{len(cookie_list)} 个现有Cookie")
-    
+
     if len(accounts) == 0 and len(cookie_list) > 0:
         for i in range(len(cookie_list)):
             accounts.append({"user": "", "password": ""})
-    
+
     max_count = max(len(accounts), len(cookie_list))
-    
+
     while len(accounts) < max_count:
         accounts.append({"user": "", "password": ""})
-    
+
     while len(cookie_list) < max_count:
         cookie_list.append("")
-    
+
     cookies_updated = False
-    
+
     for i in range(max_count):
         account_index = i + 1
         account = accounts[i]
         user = account["user"]
         password = account["password"]
         cookie = cookie_list[i] if i < len(cookie_list) else ""
-        
+
         display_user = user if user else f"账号{account_index}"
-        
+
         print(f"\n==== 账号 {display_user} 开始签到 ====")
-        
+
         if cookie:
             result, msg = sign(cookie, ns_random)
         else:
@@ -585,14 +608,14 @@ if __name__ == "__main__":
 
         if result in ["success", "already"]:
             print(f"账号 {display_user} 签到成功: {msg}")
-            
+
             print("正在查询签到收益统计...")
             stats, stats_msg = get_signin_stats(cookie, 30)
             if stats:
                 print_signin_stats(stats, display_user)
             else:
                 print(f"统计查询失败: {stats_msg}")
-            
+
             if hadsend:
                 try:
                     notification_msg = f"账号 {display_user} 签到成功：{msg}"
@@ -603,7 +626,7 @@ if __name__ == "__main__":
                     print(f"发送通知失败: {e}")
         else:
             print(f"签到失败或Cookie无效: {msg}")
-            
+
             if user and password:
                 print("尝试重新登录获取新Cookie...")
                 new_cookie = session_login(user, password, solver_type, api_base_url, client_key)
@@ -613,16 +636,16 @@ if __name__ == "__main__":
                     if result in ["success", "already"]:
                         print(f"账号 {display_user} 签到成功: {msg}")
                         cookies_updated = True
-                        
+
                         print("正在查询签到收益统计...")
                         stats, stats_msg = get_signin_stats(new_cookie, 30)
                         if stats:
                             print_signin_stats(stats, display_user)
                         else:
                             print(f"统计查询失败: {stats_msg}")
-                        
+
                         cookie_list[i] = new_cookie
-                        
+
                         if hadsend:
                             try:
                                 notification_msg = f"账号 {display_user} 签到成功：{msg}"
@@ -642,7 +665,7 @@ if __name__ == "__main__":
                             print(f"发送通知失败: {e}")
             else:
                 print(f"账号 {display_user} 无法重新登录: 未配置用户名或密码")
-    
+
     if cookies_updated and cookie_list:
         print("\n==== 处理完毕，保存更新后的Cookie ====")
         all_cookies_new = "&".join([c for c in cookie_list if c.strip()])

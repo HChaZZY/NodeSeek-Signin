@@ -386,6 +386,7 @@ def pushplus_bot(title: str, content: str) -> None:
         else:
             print("PUSHPLUS 推送失败！")
 
+
 def weplus_bot(title: str, content: str) -> None:
     """
     通过 微加机器人 推送消息。
@@ -397,7 +398,7 @@ def weplus_bot(title: str, content: str) -> None:
 
     template = "txt"
     if len(content) > 800:
-      template = "html"
+        template = "html"
 
     url = "https://www.weplusbot.com/send"
     data = {
@@ -784,7 +785,7 @@ def parse_headers(headers):
             continue
 
         key = line[:i].strip().lower()
-        val = line[i + 1 :].strip()
+        val = line[i + 1:].strip()
         parsed[key] = parsed.get(key, "") + ", " + val if key in parsed else val
 
     return parsed
@@ -800,7 +801,7 @@ def parse_string(input_string, value_format_fn=None):
             value = value_format_fn(value) if value_format_fn else value
             json_value = json.loads(value)
             matches[key] = json_value
-        except:
+        except Exception:
             matches[key] = value
     return matches
 
@@ -931,7 +932,7 @@ def add_notify_function():
         notify_function.append(custom_notify)
 
     if not notify_function:
-        print(f"无推送渠道，请检查通知变量是否正确")
+        print("无推送渠道，请检查通知变量是否正确")
     return notify_function
 
 
