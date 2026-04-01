@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# new Env('NodeSeek签到')
 
 import os
 import time
