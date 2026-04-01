@@ -1,8 +1,7 @@
 # 青龙面板
 
-
 在青龙面板中执行以下命令克隆本仓库：
 
 ```bash
-ql repo https://github.com/HChaZZY/NodeSeek-Signin.git
+ql repo https://github.com/HChaZZY/NodeSeek-Signin.git "" "scheduler|nodeseek-cloudflare-worker"
 ```
