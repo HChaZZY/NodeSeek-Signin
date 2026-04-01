@@ -1,3 +1,4 @@
+# new Env('NodeSeek签到测试')
 import sys
 import subprocess
 from dotenv import load_dotenv
