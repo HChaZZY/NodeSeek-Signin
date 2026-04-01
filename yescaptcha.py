@@ -1,3 +1,4 @@
+# new Env('YesCaptcha验证码解决器')
 from curl_cffi import requests
 import time
 import os
