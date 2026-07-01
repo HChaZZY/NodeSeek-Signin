@@ -316,12 +316,7 @@ async function sessionLogin(user, password, captchaApiKey, captchaApiUrl) {
     console.log('验证码令牌已获取');
 
     // 2. 提交登录请求
-    const loginData = {
-      username: user,
-      password: password,
-      token: token,
-      source: 'turnstile'
-    };
+    const loginData = buildLoginPayload(user, password);
 
     const response = await fetch('https://www.nodeseek.com/api/account/signIn', {
       method: 'POST',
@@ -331,7 +326,9 @@ async function sessionLogin(user, password, captchaApiKey, captchaApiUrl) {
         'Accept': 'application/json, text/plain, */*',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
         'Origin': 'https://www.nodeseek.com',
-        'Referer': 'https://www.nodeseek.com/signIn.html'
+        'Referer': 'https://www.nodeseek.com/signIn.html',
+        'x-captcha-source': 'turnstile',
+        'x-captcha-token': token
       },
       body: JSON.stringify(loginData)
     });
@@ -373,6 +370,13 @@ async function sessionLogin(user, password, captchaApiKey, captchaApiUrl) {
       message: `登录失败: ${error.message}`
     };
   }
+}
+
+function buildLoginPayload(user, password) {
+  return {
+    username: user,
+    password: password
+  };
 }
 
 /**

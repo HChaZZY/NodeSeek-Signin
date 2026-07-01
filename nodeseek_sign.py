@@ -243,6 +243,20 @@ def save_cookie(var_name: str, cookie: str):
         return False
 
 # ---------------- 登录逻辑 ----------------
+def build_login_payload(user: str, password: str) -> dict:
+    return {
+        "username": user,
+        "password": password,
+    }
+
+
+def build_login_headers(turnstile_token: str) -> dict:
+    return {
+        "x-captcha-token": turnstile_token,
+        "x-captcha-source": "turnstile",
+    }
+
+
 def session_login(user, password, solver_type, api_base_url, client_key):
     try:
         if solver_type.lower() == "yescaptcha":
@@ -276,12 +290,6 @@ def session_login(user, password, solver_type, api_base_url, client_key):
     print(f"[INFO] 使用初始 impersonate: {initial_impersonate}")
     session.get("https://www.nodeseek.com/signIn.html")
 
-    data = {
-        "username": user,
-        "password": password,
-        "token": token,
-        "source": "turnstile"
-    }
     headers = {
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
         'sec-ch-ua': "\"Not A(Brand\";v=\"99\", \"Microsoft Edge\";v=\"121\", \"Chromium\";v=\"121\"",
@@ -296,15 +304,17 @@ def session_login(user, password, solver_type, api_base_url, client_key):
         'Content-Type': "application/json"
     }
     try:
+        data = build_login_payload(user, password)
+        headers.update(build_login_headers(token))
         response = session.post("https://www.nodeseek.com/api/account/signIn", json=data, headers=headers)
         resp_json = response.json()
         if resp_json.get("success"):
             cookies = session.cookies.get_dict()
             cookie_string = '; '.join([f"{k}={v}" for k, v in cookies.items()])
             return cookie_string
-        else:
-            print("登录失败:", resp_json.get("message"))
-            return None
+
+        print("登录失败:", resp_json.get("message"))
+        return None
     except Exception as e:
         print("登录异常:", e)
         return None
